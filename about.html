@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Razo Chat Rooms</title>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary: #7b2cbf;
+            --secondary: #9d4edd;
+            --accent: #ff9e00;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --bubble-border: rgba(123, 44, 191, 0.3);
+            --particle-color: rgba(123, 44, 191, 0.3);
+            --small-bubble-color1: rgba(123, 44, 191, 0.3);
+            --small-bubble-color2: rgba(157, 78, 221, 0.4);
+            --small-bubble-border: rgba(255, 255, 255, 0.3);
+            --small-bubble-shine: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f5f5;
+            --text-color: #333333;
+            --primary: #5a189a;
+            --secondary: #7b2cbf;
+            --accent: #ff6d00;
+            --card-bg: #ffffff;
+            --input-bg: #f0f0f0;
+            --bubble-border: rgba(90, 24, 154, 0.3);
+            --particle-color: rgba(90, 24, 154, 0.2);
+            --small-bubble-color1: rgba(90, 24, 154, 0.2);
+            --small-bubble-color2: rgba(123, 44, 191, 0.15);
+            --small-bubble-border: rgba(255, 255, 255, 0.5);
+            --small-bubble-shine: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-bubble {
+            position: absolute;
+            background-color: rgba(123, 44, 191, 0.05);
+            border: 1px solid var(--bubble-border);
+            border-radius: 20px;
+            padding: 12px 18px;
+            max-width: 200px;
+            opacity: 0;
+            animation: floatUp 15s linear forwards;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            will-change: transform, opacity;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(155, 44, 191, 0.3);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: var(--accent);
+            transition: background-color 0.3s;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(123, 44, 191, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            position: relative;
+            display: inline-block;
+            transition: color 0.3s;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: background 0.3s;
+        }
+
+        .team-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .team-member {
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(123, 44, 191, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-member:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .member-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .photo-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--input-bg);
+            margin-right: 1.5rem;
+            border: 3px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(123, 44, 191, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(123, 44, 191, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(123, 44, 191, 0); }
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .member-role {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 300;
+        }
+
+        .member-bio {
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background-color: var(--particle-color);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .small-bubbles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .soap-bubble {
+            position: absolute;
+            background: radial-gradient(
+                circle at 30% 30%,
+                var(--small-bubble-color1) 0%,
+                var(--small-bubble-color2) 70%
+            );
+            border-radius: 50%;
+            box-shadow:
+                inset 0 0 10px rgba(255, 255, 255, 0.2),
+                0 0 8px rgba(123, 44, 191, 0.2);
+            opacity: 0;
+            will-change: transform, opacity;
+            animation: floatSoapBubble var(--duration) ease-in-out forwards;
+            backdrop-filter: blur(1px);
+        }
+
+        .soap-bubble::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 30%;
+            width: 30%;
+            height: 15%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(-25deg);
+        }
+
+        .soap-bubble::after {
+            content: '';
+            position: absolute;
+            top: 45%;
+            left: 15%;
+            width: 15%;
+            height: 8%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(10deg);
+        }
+
+        @keyframes floatSoapBubble {
+            0% {
+                transform: translate(var(--startX), 105vh) scale(0.7);
+                opacity: 0;
+            }
+            5% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + 5px), 95vh) scale(0.8);
+            }
+            25% {
+                transform: translate(calc(var(--startX) + var(--xMove1)), 75vh) scale(0.9);
+            }
+            50% {
+                transform: translate(calc(var(--startX) + var(--xMove2)), 50vh) scale(1);
+            }
+            75% {
+                transform: translate(calc(var(--startX) + var(--xMove3)), 25vh) scale(0.95);
+            }
+            95% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + var(--xMove4)), 5vh) scale(0.8);
+            }
+            100% {
+                transform: translate(calc(var(--startX) + var(--xMove5)), -5vh) scale(0.7);
+                opacity: 0;
+            }
+        }
+
+        #chatBubbles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .about-intro {
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .tech-item {
+            background-color: var(--input-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .glow-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at center, rgba(123, 44, 191, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .team-member:hover .glow-effect {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .team-member {
+                min-width: 100%;
+            }
+
+            .member-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .photo-placeholder {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
+
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background-color: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="small-bubbles-container" id="smallBubbles"></div>
+    <div id="chatBubbles"></div>
+
+    <a href="index.html" class="back-button">←</a>
+
+    <div class="container">
+        <header>
+            <h1>About Us</h1>
+            <button class="theme-toggle" id="themeToggle">🌓</button>
+        </header>
+
+        <div class="about-intro">
+            <p> Chattrix is created by us passionate developers who wanted to build a real-time communication platform that's both powerful and easy to use. Our mission is to connect people through seamless, secure, and engaging chat experiences.</p>
+            
+            <div class="tech-stack">
+                <span class="tech-item">WebSockets</span>
+                <span class="tech-item">Flask</span>
+                <span class="tech-item">JavaScript</span>
+                <span class="tech-item">HTML5</span>
+                <span class="tech-item">CSS3</span>
+                <span class="tech-item">Python</span>
+            </div>
+        </div>
+
+        <div class="team-container">
+           
+            <div class="team-member">
+                <div class="glow-effect"></div>
+                <div class="member-header">
+                    <div class="photo-placeholder"><img src="riz.jpg"style="height: 100px; width: 95px; "></div>
+                    <div class="member-info">
+                        <h3 class="member-name">Rizwan Ahamed</h3>
+                        <p class="member-role">Lead Developer & Backend</p>
+                    </div>
+                </div>
+                <div class="member-bio">
+                    <p>I am is a full-stack developer with over 2 years of experience in building web applications. Specializing in real-time systems, Alex architected the WebSocket infrastructure that powers Chattrix.</p>
+                </div>
+                <div class="social-links">
+                    
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="glow-effect"></div>
+                <div class="member-header">
+                    <div class="photo-placeholder"><img src="WhatsApp Image 2025-02-03 at 21.50.37_c7bf71fe.jpg" style="height: 100px; width: 90px;"></div>
+                    <div class="member-info">
+                        <h3 class="member-name">Lalithkishore</h3>
+                        <p class="member-role">UI/UX Designer & Frontend</p>
+                    </div>
+                </div>
+                <div class="member-bio">
+                    <p> I am responsible for the sleek and intuitive interface of Chattrix. With a background in human-computer interaction, I ensures our platform is accessible and enjoyable for all users.</p>
+                </div>
+                <div class="social-links">
+                  
+                </div>
+            </div>
+        </div>
+
+       
+
+      
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+
+        // Apply the current theme
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+        });
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = ''; // Clear existing particles
+
+            const particleCount = Math.min(30, window.innerWidth / 40);
+
+            // Calculate grid layout for even distribution
+            const columns = Math.ceil(Math.sqrt(particleCount));
+            const rows = Math.ceil(particleCount / columns);
+
+            const columnWidth = 100 / columns;
+            const rowHeight = 100 / rows;
+
+            let count = 0;
+
+            for (let row = 0; row < rows && count < particleCount; row++) {
+                for (let col = 0; col < columns && count < particleCount; col++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+
+                    // Random size variation
+                    const sizeVariation = Math.random() * 0.5 + 0.75;
+                    const size = Math.random() * 8 + 2;
+
+                    // Position with some jitter
+                    const baseX = col * columnWidth;
+                    const baseY = row * rowHeight;
+                    const jitterX = (Math.random() - 0.5) * columnWidth * 0.8;
+                    const jitterY = (Math.random() - 0.5) * rowHeight * 0.8;
+
+                    const posX = baseX + jitterX;
+                    const posY = baseY + jitterY;
+
+                    // Stagger animations
+                    const delay = (row * columns + col) * (15 / particleCount);
+                    const duration = (Math.random() * 5 + 10) * sizeVariation;
+
+                    particle.style.width = `${size * sizeVariation}px`;
+                    particle.style.height = `${size * sizeVariation}px`;
+                    particle.style.left = `${posX}%`;
+                    particle.style.bottom = `${-10 - (Math.random() * 20)}%`; // Start below viewport
+                    particle.style.animationDelay = `${delay}s`;
+                    particle.style.animationDuration = `${duration}s`;
+
+                    particlesContainer.appendChild(particle);
+                    count++;
+                }
+            }
+        }
+
+        // Create soap bubbles
+        function createSoapBubbles() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            bubblesContainer.innerHTML = '';
+
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createSingleSoapBubble();
+                }, i * 400); // Stagger creation
+            }
+
+            // Continue creating bubbles periodically
+            setInterval(createSingleSoapBubble, 800);
+        }
+
+        function createSingleSoapBubble() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            const bubble = document.createElement('div');
+            bubble.classList.add('soap-bubble');
+
+            // Random size and position
+            const size = Math.random() * 15 + 5; // 5-20px
+            const startX = Math.random() * 95 + 2;
+
+            // Random movement path
+            const xMove1 = (Math.random() - 0.5) * 30;
+            const xMove2 = (Math.random() - 0.5) * 30;
+            const xMove3 = (Math.random() - 0.5) * 30;
+            const xMove4 = (Math.random() - 0.5) * 30;
+            const xMove5 = (Math.random() - 0.5) * 30;
+
+            // Random animation duration and delay
+            const duration = (Math.random() * 4 + 6); // 6-10s
+            const delay = Math.random() * 2; // 0-2s
+
+            // Random opacity for more natural appearance
+            const opacity = Math.random() * 0.3 + 0.4; // 0.4-0.7
+
+            // Set custom properties for the animation
+            bubble.style.setProperty('--startX', `${startX}%`);
+            bubble.style.setProperty('--xMove1', `${xMove1}px`);
+            bubble.style.setProperty('--xMove2', `${xMove2}px`);
+            bubble.style.setProperty('--xMove3', `${xMove3}px`);
+            bubble.style.setProperty('--xMove4', `${xMove4}px`);
+            bubble.style.setProperty('--xMove5', `${xMove5}px`);
+            bubble.style.setProperty('--opacity', opacity);
+            bubble.style.setProperty('--duration', `${duration}s`);
+
+            // Set size and delay
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.animationDelay = `${delay}s`;
+
+            bubblesContainer.appendChild(bubble);
+
+            // Remove bubble after animation completes
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, (duration + delay) * 1000);
+        }
+
+        // Chat bubbles with messages
+        const chatMessages = [
+            "Meet our team! 👋",
+            "We built this with ❤️",
+            "Real-time communication! ⚡",
+            "Feedback is welcome! 💬",
+            "Open-source contributions! 🌍",
+            "Join our community! 🚀",
+            "Built for everyone! 🌟",
+            "Secure & private! 🔒",
+            "Connect instantly! 🤝",
+            "Try it today! 🎉"
+        ];
+
+        let activeBubbles = 0;
+        const MAX_BUBBLES = 15;
+
+        function createChatBubble() {
+            if (activeBubbles >= MAX_BUBBLES) return;
+
+            const container = document.getElementById('chatBubbles');
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble');
+
+            const message = chatMessages[Math.floor(Math.random() * chatMessages.length)];
+
+            // Position in one of 5 vertical sections
+            const section = Math.floor(Math.random() * 5);
+            const baseLeftPos = section * 20;
+            const variation = Math.random() * 15;
+            const leftPos = baseLeftPos + variation;
+
+            const duration = Math.random() * 5 + 15;
+
+            bubble.textContent = message;
+            bubble.style.left = `${leftPos}%`;
+            bubble.style.animationDuration = `${duration}s`;
+
+            container.appendChild(bubble);
+            activeBubbles++;
+
+            // Remove bubble after animation completes
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                    activeBubbles--;
+                }
+            }, duration * 1000);
+        }
+
+        function manageChatBubbles() {
+            // Initial batch of bubbles
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createChatBubble(), i * 1000);
+            }
+
+            // Continue creating bubbles periodically
+            setInterval(() => {
+                if (Math.random() > 0.5) {
+                    createChatBubble();
+                }
+            }, 1000);
+        }
+
+        // Debounce function for resize events
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            createSoapBubbles();
+            manageChatBubbles();
+
+            // Recreate particles on resize (debounced)
+            window.addEventListener('resize', debounce(() => {
+                createParticles();
+            }, 250));
+        });
+    </script>
+</body>
+</html>

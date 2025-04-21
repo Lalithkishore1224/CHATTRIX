@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chattrix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary: #7b2cbf;
+            --secondary: #9d4edd;
+            --accent: #ff9e00;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --bubble-border: rgba(123, 44, 191, 0.3);
+            --particle-color: rgba(123, 44, 191, 0.3);
+            --small-bubble-color1: rgba(123, 44, 191, 0.3);
+            --small-bubble-color2: rgba(157, 78, 221, 0.4);
+            --small-bubble-border: rgba(255, 255, 255, 0.3);
+            --small-bubble-shine: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f5f5;
+            --text-color: #333333;
+            --primary: #5a189a;
+            --secondary: #7b2cbf;
+            --accent: #ff6d00;
+            --card-bg: #ffffff;
+            --input-bg: #f0f0f0;
+            --bubble-border: rgba(90, 24, 154, 0.3);
+            --particle-color: rgba(90, 24, 154, 0.2);
+            --small-bubble-color1: rgba(90, 24, 154, 0.2);
+            --small-bubble-color2: rgba(123, 44, 191, 0.15);
+            --small-bubble-border: rgba(255, 255, 255, 0.5);
+            --small-bubble-shine: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-bubble {
+            position: absolute;
+            background-color: rgba(123, 44, 191, 0.05);
+            border: 1px solid var(--bubble-border);
+            border-radius: 20px;
+            padding: 12px 18px;
+            max-width: 200px;
+            opacity: 0;
+            animation: floatUp 15s linear forwards;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            will-change: transform, opacity;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(155, 44, 191, 0.3);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: var(--accent);
+            transition: background-color 0.3s;
+        }
+
+        /* New About Button Styles */
+        .about-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: var(--accent);
+            transition: all 0.3s ease;
+            font-size: 18px;
+            z-index: 100;
+        }
+
+        .about-btn:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(123, 44, 191, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            position: relative;
+            display: inline-block;
+            transition: color 0.3s;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: background 0.3s;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+            color: var(--text-color);
+            transition: color 0.3s;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(123, 44, 191, 0.3);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+        }
+
+        .flash-message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            animation: fadeIn 0.5s;
+            text-align: center;
+        }
+
+        .error {
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ff6b6b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background-color: var(--particle-color);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .small-bubbles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .soap-bubble {
+            position: absolute;
+            background: radial-gradient(
+                circle at 30% 30%,
+                var(--small-bubble-color1) 0%,
+                var(--small-bubble-color2) 70%
+            );
+            border-radius: 50%;
+            box-shadow:
+                inset 0 0 10px rgba(255, 255, 255, 0.2),
+                0 0 8px rgba(123, 44, 191, 0.2);
+            opacity: 0;
+            will-change: transform, opacity;
+            animation: floatSoapBubble var(--duration) ease-in-out forwards;
+            backdrop-filter: blur(1px);
+        }
+
+        .soap-bubble::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 30%;
+            width: 30%;
+            height: 15%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(-25deg);
+        }
+
+        .soap-bubble::after {
+            content: '';
+            position: absolute;
+            top: 45%;
+            left: 15%;
+            width: 15%;
+            height: 8%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(10deg);
+        }
+
+        @keyframes floatSoapBubble {
+            0% {
+                transform: translate(var(--startX), 105vh) scale(0.7);
+                opacity: 0;
+            }
+            5% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + 5px), 95vh) scale(0.8);
+            }
+            25% {
+                transform: translate(calc(var(--startX) + var(--xMove1)), 75vh) scale(0.9);
+            }
+            50% {
+                transform: translate(calc(var(--startX) + var(--xMove2)), 50vh) scale(1);
+            }
+            75% {
+                transform: translate(calc(var(--startX) + var(--xMove3)), 25vh) scale(0.95);
+            }
+            95% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + var(--xMove4)), 5vh) scale(0.8);
+            }
+            100% {
+                transform: translate(calc(var(--startX) + var(--xMove5)), -5vh) scale(0.7);
+                opacity: 0;
+            }
+        }
+
+        #chatBubbles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+       
+        .button {
+            position: relative;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+            padding-block: 0.5rem;
+            padding-inline: 1.25rem;
+            background-color: rgb(0 107 179);
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ffff;
+            gap: 10px;
+            font-weight: bold;
+            border: 3px solid #ffffff4d;
+            outline: none;
+            overflow: hidden;
+            font-size: 15px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            border-color: #fff9;
+        }
+
+        .button:hover .icon {
+            transform: translate(4px);
+        }
+
+        .button:hover::before {
+            animation: shine 1.5s ease-out infinite;
+        }
+
+        .button::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100%;
+            background-image: linear-gradient(
+                120deg,
+                rgba(255, 255, 255, 0) 30%,
+                rgba(255, 255, 255, 0.8),
+                rgba(255, 255, 255, 0) 70%
+            );
+            top: 0;
+            left: -100px;
+            opacity: 0.6;
+        }
+
+        @keyframes shine {
+            0% {
+                left: -100px;
+            }
+
+            60% {
+                left: 100%;
+            }
+
+            to {
+                left: 100%;
+            }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 30px;
+            border: 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10rem;
+            transition: all 0.02s;
+            font-weight: bold;
+            cursor: pointer;
+            color: rgb(37, 37, 37);
+            z-index: 0;
+            box-shadow: 0 0px 7px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn:hover {
+            background: rgb(193, 228, 248);
+            color: rgb(33, 0, 85);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .hoverEffect {
+            position: absolute;
+            bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .hoverEffect div {
+            background: rgb(222, 0, 75);
+            background: linear-gradient(
+                90deg,
+                rgba(222, 0, 75, 1) 0%,
+                rgba(191, 70, 255, 1) 49%,
+                rgba(0, 212, 255, 1) 100%
+            );
+            border-radius: 40rem;
+            width: 10rem;
+            height: 10rem;
+            transition: 0.4s;
+            filter: blur(20px);
+            animation: effect infinite 3s linear;
+            opacity: 0.5;
+        }
+
+        .btn:hover .hoverEffect div {
+            width: 8rem;
+            height: 8rem;
+        }
+
+        @keyframes effect {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="small-bubbles-container" id="smallBubbles"></div>
+    <div id="chatBubbles"></div>
+
+    <div class="container">
+        <header>
+            <!-- Added About Button Here -->
+           
+               <a href="about.html"> <button  id="aboutBtn" title="About Chattrix"type="submit" class="btn">
+                    About Us
+                    <div class="hoverEffect">
+                        <div></div>
+                    </div>
+                </button></a>
+               
+            <h1>CHATTRIX</h1>
+            <h1>Efforts Unleashed</h1>
+            <button class="theme-toggle" id="themeToggle">🌓</button>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message error">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>Join Existing Room</h2>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="login">
+                <div class="form-group">
+                    <label for="username">Your Name</label>
+                    <input type="text" name="username" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="room">Room ID</label>
+                    <input type="text" name="room" placeholder="Enter Room ID" required>
+                </div>
+                <button type="submit" class="btn">
+                    J O I N
+                    <div class="hoverEffect">
+                        <div></div>
+                    </div>
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Create New Room</h2>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="create">
+                <div class="form-group">
+                    <label for="username">Your Name</label>
+                    <input type="text" name="username" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="room">Room ID</label>
+                    <input type="text" name="room" placeholder="Enter Room ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="room_name">Room Name</label>
+                    <input type="text" name="room_name" placeholder="Enter Room Name" required>
+                </div>
+                <button class="button">
+                    C R E A T E
+                    <svg fill="currentColor" viewBox="0 0 24 24" class="icon">
+                        <path
+                            clip-rule="evenodd"
+                            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3z"
+                            fill-rule="evenodd"
+                        ></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const aboutBtn = document.getElementById('aboutBtn');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+
+        // Apply the current theme
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        // Theme toggle functionality
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+        });
+
+        // About button functionality
+        aboutBtn.addEventListener('click', () => {
+            // You can replace this with your preferred navigation method
+            window.location.href = '/about';
+        });
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = ''; // Clear existing particles
+
+            const particleCount = Math.min(30, window.innerWidth / 40);
+
+            // Calculate grid layout for even distribution
+            const columns = Math.ceil(Math.sqrt(particleCount));
+            const rows = Math.ceil(particleCount / columns);
+
+            const columnWidth = 100 / columns;
+            const rowHeight = 100 / rows;
+
+            let count = 0;
+
+            for (let row = 0; row < rows && count < particleCount; row++) {
+                for (let col = 0; col < columns && count < particleCount; col++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+
+                    // Random size variation
+                    const sizeVariation = Math.random() * 0.5 + 0.75;
+                    const size = Math.random() * 8 + 2;
+
+                    // Position with some jitter
+                    const baseX = col * columnWidth;
+                    const baseY = row * rowHeight;
+                    const jitterX = (Math.random() - 0.5) * columnWidth * 0.8;
+                    const jitterY = (Math.random() - 0.5) * rowHeight * 0.8;
+
+                    const posX = baseX + jitterX;
+                    const posY = baseY + jitterY;
+
+                    // Stagger animations
+                    const delay = (row * columns + col) * (15 / particleCount);
+                    const duration = (Math.random() * 5 + 10) * sizeVariation;
+
+                    particle.style.width = `${size * sizeVariation}px`;
+                    particle.style.height = `${size * sizeVariation}px`;
+                    particle.style.left = `${posX}%`;
+                    particle.style.bottom = `${-10 - (Math.random() * 20)}%`; // Start below viewport
+                    particle.style.animationDelay = `${delay}s`;
+                    particle.style.animationDuration = `${duration}s`;
+
+                    particlesContainer.appendChild(particle);
+                    count++;
+                }
+            }
+        }
+
+        // Create soap bubbles
+        function createSoapBubbles() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            bubblesContainer.innerHTML = '';
+
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createSingleSoapBubble();
+                }, i * 400); // Stagger creation
+            }
+
+            // Continue creating bubbles periodically
+            setInterval(createSingleSoapBubble, 800);
+        }
+
+        function createSingleSoapBubble() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            const bubble = document.createElement('div');
+            bubble.classList.add('soap-bubble');
+
+            // Random size and position
+            const size = Math.random() * 15 + 5; // 5-20px
+            const startX = Math.random() * 95 + 2;
+
+            // Random movement path
+            const xMove1 = (Math.random() - 0.5) * 30;
+            const xMove2 = (Math.random() - 0.5) * 30;
+            const xMove3 = (Math.random() - 0.5) * 30;
+            const xMove4 = (Math.random() - 0.5) * 30;
+            const xMove5 = (Math.random() - 0.5) * 30;
+
+            // Random animation duration and delay
+            const duration = (Math.random() * 4 + 6); // 6-10s
+            const delay = Math.random() * 2; // 0-2s
+
+            // Random opacity for more natural appearance
+            const opacity = Math.random() * 0.3 + 0.4; // 0.4-0.7
+
+            // Set custom properties for the animation
+            bubble.style.setProperty('--startX', `${startX}%`);
+            bubble.style.setProperty('--xMove1', `${xMove1}px`);
+            bubble.style.setProperty('--xMove2', `${xMove2}px`);
+            bubble.style.setProperty('--xMove3', `${xMove3}px`);
+            bubble.style.setProperty('--xMove4', `${xMove4}px`);
+            bubble.style.setProperty('--xMove5', `${xMove5}px`);
+            bubble.style.setProperty('--opacity', opacity);
+            bubble.style.setProperty('--duration', `${duration}s`);
+
+            // Set size and delay
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.animationDelay = `${delay}s`;
+
+            bubblesContainer.appendChild(bubble);
+
+            // Remove bubble after animation completes
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, (duration + delay) * 1000);
+        }
+
+        // Chat bubbles with messages
+        const chatMessages = [
+            "Hey there! 👋",
+            "What's up? 😊",
+            "Join our room! 🎉",
+            "Let's chat! 💬",
+            "Coding is fun! 💻",
+            "Hello world! 🌍",
+            "Nice to meet you! 🤝",
+            "How's your day? ☀️",
+            "Let's collaborate! ✨",
+            "Welcome! 🎊",
+            "Chatting is awesome! 🚀",
+            "Join us! 👥",
+            "Let's connect! 🔗",
+            "Fun times ahead! 🎈",
+            "Ready to chat? 🎯",
+            "New friends here! 👫",
+            "Talk about anything! 🗣️",
+            "Share your thoughts! 💭",
+            "Connect instantly! ⚡",
+            "Be part of us! 🌟"
+        ];
+
+        let activeBubbles = 0;
+        const MAX_BUBBLES = 15;
+
+        function createChatBubble() {
+            if (activeBubbles >= MAX_BUBBLES) return;
+
+            const container = document.getElementById('chatBubbles');
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble');
+
+            const message = chatMessages[Math.floor(Math.random() * chatMessages.length)];
+
+            // Position in one of 5 vertical sections
+            const section = Math.floor(Math.random() * 5);
+            const baseLeftPos = section * 20;
+            const variation = Math.random() * 15;
+            const leftPos = baseLeftPos + variation;
+
+            const duration = Math.random() * 5 + 15;
+
+            bubble.textContent = message;
+            bubble.style.left = `${leftPos}%`;
+            bubble.style.animationDuration = `${duration}s`;
+
+            container.appendChild(bubble);
+            activeBubbles++;
+
+            // Remove bubble after animation completes
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                    activeBubbles--;
+                }
+            }, duration * 1000);
+        }
+
+        function manageChatBubbles() {
+            // Initial batch of bubbles
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createChatBubble(), i * 1000);
+            }
+
+            // Continue creating bubbles periodically
+            setInterval(() => {
+                if (Math.random() > 0.5) {
+                    createChatBubble();
+                }
+            }, 1000);
+        }
+
+        // Debounce function for resize events
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            createSoapBubbles();
+            manageChatBubbles();
+
+            // Recreate particles on resize (debounced)
+            window.addEventListener('resize', debounce(() => {
+                createParticles();
+            }, 250));
+        });
+    </script>
+</body>
+</html>

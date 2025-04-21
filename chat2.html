@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chattrix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary: #7b2cbf;
+            --secondary: #9d4edd;
+            --accent: #ff9e00;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --message-bg: #2a2a2a;
+            --message-hover: #333333;
+            --own-message-bg: rgba(123, 44, 191, 0.2);
+            --own-message-hover: rgba(123, 44, 191, 0.3);
+            --bubble-border: rgba(123, 44, 191, 0.3);
+            --particle-color: rgba(123, 44, 191, 0.3);
+            --small-bubble-color1: rgba(123, 44, 191, 0.3);
+            --small-bubble-color2: rgba(157, 78, 221, 0.4);
+            --small-bubble-border: rgba(255, 255, 255, 0.3);
+            --small-bubble-shine: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f5f5;
+            --text-color: #333333;
+            --primary: #5a189a;
+            --secondary: #7b2cbf;
+            --accent: #ff6d00;
+            --card-bg: #ffffff;
+            --input-bg: #f0f0f0;
+            --message-bg: #f0f0f0;
+            --message-hover: #e5e5e5;
+            --own-message-bg: rgba(90, 24, 154, 0.1);
+            --own-message-hover: rgba(90, 24, 154, 0.2);
+            --bubble-border: rgba(90, 24, 154, 0.3);
+            --particle-color: rgba(90, 24, 154, 0.2);
+            --small-bubble-color1: rgba(90, 24, 154, 0.2);
+            --small-bubble-color2: rgba(123, 44, 191, 0.15);
+            --small-bubble-border: rgba(255, 255, 255, 0.5);
+            --small-bubble-shine: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background-color: var(--particle-color);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .small-bubbles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .soap-bubble {
+            position: absolute;
+            background: radial-gradient(
+                circle at 30% 30%,
+                var(--small-bubble-color1) 0%,
+                var(--small-bubble-color2) 70%
+            );
+            border-radius: 50%;
+            box-shadow:
+                inset 0 0 10px rgba(255, 255, 255, 0.2),
+                0 0 8px rgba(123, 44, 191, 0.2);
+            opacity: 0;
+            will-change: transform, opacity;
+            animation: floatSoapBubble var(--duration) ease-in-out forwards;
+            backdrop-filter: blur(1px);
+        }
+
+        .soap-bubble::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 30%;
+            width: 30%;
+            height: 15%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(-25deg);
+        }
+
+        .soap-bubble::after {
+            content: '';
+            position: absolute;
+            top: 45%;
+            left: 15%;
+            width: 15%;
+            height: 8%;
+            background: var(--small-bubble-shine);
+            border-radius: 50%;
+            filter: blur(1px);
+            transform: rotate(10deg);
+        }
+
+        @keyframes floatSoapBubble {
+            0% {
+                transform: translate(var(--startX), 105vh) scale(0.7);
+                opacity: 0;
+            }
+            5% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + 5px), 95vh) scale(0.8);
+            }
+            25% {
+                transform: translate(calc(var(--startX) + var(--xMove1)), 75vh) scale(0.9);
+            }
+            50% {
+                transform: translate(calc(var(--startX) + var(--xMove2)), 50vh) scale(1);
+            }
+            75% {
+                transform: translate(calc(var(--startX) + var(--xMove3)), 25vh) scale(0.95);
+            }
+            95% {
+                opacity: var(--opacity);
+                transform: translate(calc(var(--startX) + var(--xMove4)), 5vh) scale(0.8);
+            }
+            100% {
+                transform: translate(calc(var(--startX) + var(--xMove5)), -5vh) scale(0.7);
+                opacity: 0;
+            }
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            height: 100vh;
+            margin: 0 auto;
+            padding: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(123, 44, 191, 0.2);
+            margin-bottom: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(155, 44, 191, 0.3);
+            animation: pulsate 3s infinite alternate;
+        }
+
+        @keyframes pulsate {
+            0% {
+                text-shadow: 0 0 5px rgba(155, 44, 191, 0.3);
+            }
+            100% {
+                text-shadow: 0 0 15px rgba(155, 44, 191, 0.5), 0 0 20px rgba(255, 158, 0, 0.3);
+            }
+        }
+
+        .room-info {
+            background-color: var(--card-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .room-info i {
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            color: var(--accent);
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(180deg);
+        }
+
+        .leave-btn {
+            background: linear-gradient(135deg, #ff5e62, #ff9966);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leave-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s;
+        }
+
+        .leave-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
+        }
+
+        .leave-btn:hover::before {
+            left: 100%;
+        }
+
+        .chat-body {
+            display: flex;
+            flex: 1;
+            gap: 1rem;
+            height: calc(100vh - 160px);
+            overflow: hidden;
+        }
+
+        .users-container {
+            width: 250px;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(123, 44, 191, 0.2);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .users-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(123, 44, 191, 0.2);
+        }
+
+        .users-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+        }
+
+        .users-count {
+            background-color: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(123, 44, 191, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(123, 44, 191, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(123, 44, 191, 0);
+            }
+        }
+
+        .users-list {
+            list-style-type: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .users-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 0.3s ease-out;
+            transition: all 0.2s;
+        }
+
+        .users-list li:hover {
+            background-color: rgba(123, 44, 191, 0.1);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .current-user {
+            border-left: 3px solid var(--accent);
+            background-color: rgba(255, 158, 0, 0.05);
+        }
+
+        .messages-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(123, 44, 191, 0.2);
+            overflow: hidden;
+            animation: zoomIn 0.5s ease-out;
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .messages-list {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeInUp 0.3s ease-out;
+            transition: all 0.2s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message:hover {
+            transform: translateY(-2px);
+        }
+
+        .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .other-message {
+            align-self: flex-start;
+            background-color: var(--message-bg);
+            border-top-left-radius: 4px;
+        }
+
+        .other-message:hover {
+            background-color: var(--message-hover);
+        }
+
+        .own-message {
+            align-self: flex-end;
+            background-color: var(--own-message-bg);
+            border-top-right-radius: 4px;
+        }
+
+        .own-message:hover {
+            background-color: var(--own-message-hover);
+        }
+
+        .message-timestamp {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+        }
+
+        .typing-indicator {
+            height: 20px;
+            padding: 0 1rem;
+            font-style: italic;
+            color: var(--accent);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .message-input-container {
+            padding: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            border-top: 1px solid rgba(123, 44, 191, 0.2);
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 25px;
+            border: 1px solid rgba(123, 44, 191, 0.3);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            border: 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 50%;
+            transition: all 0.3s;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .hoverEffect {
+            position: absolute;
+            bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: -1;
+        }
+
+        .hoverEffect div {
+            background: linear-gradient(
+                90deg,
+                rgba(222, 0, 75, 0.7) 0%,
+                rgba(191, 70, 255, 0.7) 49%,
+                rgba(0, 212, 255, 0.7) 100%
+            );
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            transition: 0.4s;
+            filter: blur(8px);
+            animation: effect infinite 3s linear;
+            opacity: 0.6;
+        }
+
+        .btn:hover .hoverEffect div {
+            width: 60px;
+            height: 60px;
+        }
+
+        @keyframes effect {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .file-btn {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid rgba(123, 44, 191, 0.3);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .emoji-btn {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid rgba(123, 44, 191, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 100;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-icon {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        /* Additional animations */
+        @keyframes float-animation {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes colorShift {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .float-animation {
+            animation: float-animation 4s ease-in-out infinite;
+        }
+
+        .color-shift {
+            animation: colorShift 10s linear infinite;
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Bubble effect for new messages */
+        .bubble-in {
+            animation: bubbleIn 0.4s ease-out;
+        }
+
+        @keyframes bubbleIn {
+            0% {
+                transform: scale(0);
+            }
+            70% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Shine effect for buttons */
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: rotate(30deg) translate(-100%, -100%);
+            }
+            100% {
+                transform: rotate(30deg) translate(100%, 100%);
+            }
+        }
+
+        /* Typing dots animation */
+        .typing-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Glow effect for active user */
+        .glow {
+            box-shadow: 0 0 5px var(--accent), 0 0 10px var(--primary);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px var(--accent), 0 0 10px var(--primary);
+            }
+            to {
+                box-shadow: 0 0 10px var(--accent), 0 0 20px var(--primary);
+            }
+        }
+
+        /* Shake animation for notifications */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+
+        /* Quick fade transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Scale bounce for clicked items */
+        .scale-bounce {
+            animation: scaleBounce 0.5s ease;
+        }
+
+        @keyframes scaleBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-body {
+                flex-direction: column;
+                height: calc(100vh - 180px);
+            }
+
+            .users-container {
+                width: 100%;
+                max-height: 150px;
+            }
+
+            .messages-container {
+                height: calc(100vh - 350px);
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+      
+       
+       
+        
+        
+    </style>
+   
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="small-bubbles-container" id="smallBubbles"></div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="logo-container">
+                <h1 class="fade-in">CHATTRIX</h1>
+                <div class="room-info fade-in">
+                    <i class="fas fa-hashtag"></i>
+                    <span id="roomName">{{ room }}</span>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="leave-btn shine" onclick="leaveRoom()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Leave Room
+                </button><br>
+                <button class="theme-toggle" id="themeToggle">🌓</button>
+            </div>
+        </div>
+
+        <div class="chat-body">
+            <div class="users-container">
+                <div class="users-header">
+                    <h3>Online Users</h3>
+                    <div class="users-count" id="usersCount">0</div>
+                </div>
+                <ul class="users-list" id="activeUsers">
+                    <!-- Users will be dynamically added here -->
+                </ul>
+            </div>
+
+            <div class="messages-container">
+                <div class="messages-list" id="messages">
+                    <!-- Messages will be dynamically added here -->
+                </div>
+                <div class="typing-indicator" id="typingIndicator"></div>
+                <div class="message-input-container">
+                    <button class="btn emoji-btn" id="emojiBtn">
+                        <i class="far fa-smile"></i>
+                        
+                    </button>
+                    <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." oninput="handleTyping()" onkeypress="handleKeyPress(event)">
+                    <label for="imageInput" class="btn file-btn">
+                        <i class="fas fa-paperclip"></i>
+                    </label>
+                    <input type="file" id="imageInput" class="file-input" onchange="handleImageUpload()">
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf,.docx,.txt,.xlsx,.pptx" style="display: none;">
+                    <button class="btn file-send-btn" onclick="sendFile()">
+                        <i class="fas fa-file-upload"></i>
+                    </button>
+                    <button class="btn send-btn" onclick="sendMessage()" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        <div class="hoverEffect">
+                            <div></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-bell notification-icon"></i>
+        <div class="notification-content">
+            <strong id="notificationSender"></strong>
+            <p id="notificationText"></p>
+        </div>
+    </div>
+
+    <audio id="messageSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+    <script>
+       
+        function sendFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+            
+            if (file) {
+                // Show loading state
+                const fileBtn = document.querySelector('.file-send-btn');
+                fileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const filename = file.name;
+                    const fileData = event.target.result;
+                    
+                   
+                    socket.emit("message", {
+                        room: room, 
+                        username: username, 
+                        message: `<div class="file-message">
+                            <i class="fas fa-file-alt"></i>
+                            <a href="${fileData}" download="${filename}">${filename}</a>
+                            <span>(${(file.size / 1024).toFixed(1)} KB)</span>
+                        </div>`
+                    });
+                    
+                    
+                    fileInput.value = "";
+                    fileBtn.innerHTML = '<i class="fas fa-file-upload"></i>';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // Trigger file input click if no file selected
+                fileInput.click();
+            }
+        }
+
+        // Update the file input change handler
+        document.getElementById('fileInput').addEventListener('change', function() {
+            if (this.files.length > 0) {
+                sendFile();
+            }
+        });
+
+        // Add this new style for file messages
+        const style = document.createElement('style');
+        style.textContent = `
+            .file-message {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                background: rgba(123, 44, 191, 0.1);
+                border-radius: 8px;
+                margin-top: 5px;
+            }
+            
+            .file-message i {
+                color: var(--accent);
+                font-size: 1.2em;
+            }
+            
+            .file-message a {
+                color: var(--primary);
+                text-decoration: none;
+                font-weight: bold;
+            }
+            
+            .file-message a:hover {
+                text-decoration: underline;
+            }
+            
+            .file-message span {
+                font-size: 0.8em;
+                color: rgba(255, 255, 255, 0.6);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    <script>
+        // Socket.io setup
+        var socket = io();
+        var username = "{{ username }}";
+        var room = "{{ room }}";
+        var sessionId = "{{ session_id }}";
+        var userColors = {};
+        
+        
+        const themeToggle = document.getElementById('themeToggle');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        
+       
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            
+          
+            themeToggle.classList.add('scale-bounce');
+            setTimeout(() => {
+                themeToggle.classList.remove('scale-bounce');
+            }, 500);
+        });
+        
+        
+        function getUserColor(user) {
+            if (!(user in userColors)) {
+                const hue = Math.floor(Math.random() * 360);
+                userColors[user] = `hsl(${hue}, 70%, 60%)`;
+            }
+            return userColors[user];
+        }
+        
+       
+        socket.emit("join", {username: username, room: room, sessionId: sessionId});
+        
+    
+        document.getElementById('roomName').textContent = room;
+        
+        
+        const buttons = document.querySelectorAll('.btn, .leave-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const x = e.clientX - e.target.getBoundingClientRect().left;
+                const y = e.clientY - e.target.getBoundingClientRect().top;
+                
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+        
+       
+        socket.on("message", function(data) {
+            const messagesDiv = document.getElementById("messages");
+            const color = getUserColor(data.username);
+            const isOwnMessage = data.username === username;
+            
+           
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwnMessage ? 'own-message' : 'other-message'} bubble-in`;
+            
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            const sender = document.createElement('div');
+            sender.className = 'message-sender';
+            sender.style.color = color;
+            sender.textContent = data.username;
+            
+            
+            if (data.message.startsWith('<img')) {
+             
+                messageContent.innerHTML = data.message;
+            } else {
+               
+                const messageText = document.createElement('div');
+                messageText.textContent = data.message;
+                messageContent.appendChild(messageText);
+            }
+            
+           
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            const now = new Date();
+            timestamp.textContent = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+           
+            messageDiv.appendChild(sender);
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(timestamp);
+            
+          
+            messagesDiv.appendChild(messageDiv);
+            
+         
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+           
+            if (!isOwnMessage) {
+                document.getElementById("messageSound").play();
+                showNotification(data.username, data.message);
+            }
+            
+           
+            while (messagesDiv.children.length > 50) {
+                messagesDiv.removeChild(messagesDiv.children[0]);
+            }
+        });
+        
+      
+        socket.on("update_users", function(data) {
+            const usersList = document.getElementById("activeUsers");
+            const usersCount = document.getElementById("usersCount");
+            usersList.innerHTML = "";
+            
+           
+            usersCount.textContent = data.users.length;
+            usersCount.classList.add('pulse');
+            setTimeout(() => {
+                usersCount.classList.remove('pulse');
+            }, 1000);
+            
+           
+            data.users.forEach(user => {
+                const userItem = document.createElement('li');
+                userItem.className = user === username ? 'current-user fade-in' : 'fade-in';
+                
+              
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                avatar.textContent = user.substring(0, 2).toUpperCase();
+                avatar.style.background = `linear-gradient(135deg, ${getUserColor(user)}, var(--secondary))`;
+                
+                
+                const userName = document.createElement('span');
+                userName.textContent = user;
+                
+               
+                userItem.appendChild(avatar);
+                userItem.appendChild(userName);
+                usersList.appendChild(userItem);
+                
+               
+                setTimeout(() => {
+                    userItem.classList.add('scale-bounce');
+                    setTimeout(() => {
+                        userItem.classList.remove('scale-bounce');
+                    }, 500);
+                }, 100);
+            });
+        });
+        
+      
+        socket.on("typing", function(data) {
+            if (data.username !== username) {
+                const typingIndicator = document.getElementById("typingIndicator");
+                typingIndicator.innerHTML = `<span class="typing-dots">${data.username} is typing</span>`;
+                
+                
+                setTimeout(() => {
+                    typingIndicator.innerHTML = "";
+                }, 2000);
+            }
+        });
+        
+      
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+            
+            if (message) {
+               
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.classList.add('scale-bounce');
+                setTimeout(() => {
+                    sendBtn.classList.remove('scale-bounce');
+                }, 500);
+                
+                
+                socket.emit("message", {room: room, username: username, message: message});
+                messageInput.value = "";
+            }
+        }
+        
+       
+        function handleImageUpload() {
+            const file = document.getElementById("imageInput").files[0];
+            if (file) {
+                // Show loading animation
+                const fileBtn = document.querySelector('.file-btn');
+                fileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Send image to server
+                    socket.emit("message", {
+                        room: room, 
+                        username: username, 
+                        message: `<img src="${event.target.result}" width="200">`
+                    });
+                    
+                    // Reset file input
+                    document.getElementById("imageInput").value = "";
+                    fileBtn.innerHTML = '<i class="fas fa-paperclip"></i>';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Handle typing event
+        function handleTyping() {
+            socket.emit("typing", {room: room, username: username});
+        }
+        
+        // Handle enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Leave room function
+        function leaveRoom() {
+            // Apply leave animation
+            document.body.classList.add('fade-out');
+            
+            setTimeout(() => {
+                socket.emit("leave", {room: room, username: username});
+                window.location.href = "index.html";
+            }, 500);
+        }
+        
+        // Show notification
+        function showNotification(sender, message) {
+            const notification = document.getElementById('notification');
+            const senderElement = document.getElementById('notificationSender');
+            const textElement = document.getElementById('notificationText');
+            
+            // Remove any HTML tags from message
+            const textContent = message.replace(/<[^>]*>/g, '[Image]');
+            
+            // Set notification content
+            senderElement.textContent = sender;
+            textElement.textContent = textContent.length > 30 ? textContent.substring(0, 30) + '...' : textContent;
+            
+            // Show and animate notification
+            notification.classList.add('show', 'shake');
+            
+            // Hide notification after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('shake');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 300);
+            }, 4000);
+        }
+        
+       
+        document.getElementById('emojiBtn').addEventListener('click', function() {
+          
+            const emojis = ['😊', '👍', '🎉', '💡', '🔥', '❤️', '😂', '✨', '🌟', '🚀', '💯', '🎮', '🎵', '🍕', '🌈', '✅'];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value += randomEmoji;
+            messageInput.focus();
+            
+         
+            this.classList.add('scale-bounce');
+            setTimeout(() => {
+                this.classList.remove('scale-bounce');
+            }, 500);
+        });
+        
+        
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = '';
+            
+            const particleCount = Math.min(30, window.innerWidth / 40);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+               
+                const size = Math.random() * 8 + 2;
+                
+              
+                const posX = Math.random() * 100;
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 5 + 10;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}%`;
+                particle.style.bottom = `${-10 - (Math.random() * 20)}%`;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        function createSoapBubbles() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            
+           
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createSingleSoapBubble();
+                }, i * 400);
+            }
+            
+            
+            setInterval(createSingleSoapBubble, 800);
+        }
+        
+        function createSingleSoapBubble() {
+            const bubblesContainer = document.getElementById('smallBubbles');
+            const bubble = document.createElement('div');
+            bubble.classList.add('soap-bubble');
+            
+            
+            const size = Math.random() * 15 + 5;
+            
+           
+            const startX = Math.random() * 95 + 2;
+            const xMove1 = (Math.random() - 0.5) * 30;
+            const xMove2 = (Math.random() - 0.5) * 30;
+            const xMove3 = (Math.random() - 0.5) * 30;
+            const xMove4 = (Math.random() - 0.5) * 30;
+            const xMove5 = (Math.random() - 0.5) * 30;
+            
+           
+            const duration = (Math.random() * 4 + 6);
+            const delay = Math.random() * 2;
+            const opacity = Math.random() * 0.3 + 0.4;
+            
+           
+            bubble.style.setProperty('--startX', `${startX}%`);
+            bubble.style.setProperty('--xMove1', `${xMove1}px`);
+            bubble.style.setProperty('--xMove2', `${xMove2}px`);
+            bubble.style.setProperty('--xMove3', `${xMove3}px`);
+            bubble.style.setProperty('--xMove4', `${xMove4}px`);
+            bubble.style.setProperty('--xMove5', `${xMove5}px`);
+            bubble.style.setProperty('--opacity', opacity);
+            bubble.style.setProperty('--duration', `${duration}s`);
+            
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.animationDelay = `${delay}s`;
+            
+            bubblesContainer.appendChild(bubble);
+            
+           
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, (duration + delay) * 1000);
+        }
+        
+       
+        function createChatBubble() {
+            const container = document.getElementById('particles');
+            const messages = [
+                "Welcome to Razo Chat! 👋",
+                "Join the conversation! 💬",
+                "Share your thoughts! 💭",
+                "Connect with friends! 🔗",
+                "Express yourself! 🎭",
+                "Be creative! 🎨",
+                "Stay connected! 📱",
+                "Have fun chatting! 🎉"
+            ];
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble float-animation';
+            bubble.style.left = `${Math.random() * 80 + 10}%`;
+            bubble.style.bottom = '-100px';
+            bubble.style.opacity = '0.15';
+            bubble.style.zIndex = '0';
+            bubble.style.transform = 'scale(0.8)';
+            bubble.textContent = messages[Math.floor(Math.random() * messages.length)];
+            
+            container.appendChild(bubble);
+            
+            
+            const duration = Math.random() * 5 + 10;
+            const randomX = (Math.random() - 0.5) * 100;
+            
+            bubble.animate([
+                { transform: 'translate(0, 0) scale(0.8)', opacity: 0 },
+                { transform: `translate(${randomX}px, -100px) scale(1)`, opacity: 0.15, offset: 0.2 },
+                { transform: `translate(${randomX * 0.7}px, -300px) scale(1.1)`, opacity: 0.15, offset: 0.6 },
+                { transform: `translate(${randomX * 1.2}px, -500px) scale(1.2)`, opacity: 0 }
+            ], {
+                duration: duration * 1000,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+            
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                }
+            }, duration * 1000);
+        }
+        
+       
+        function startBackgroundChatBubbles() {
+           
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    createChatBubble();
+                }, i * 1500);
+            }
+            
+            
+            setInterval(createChatBubble, 4000);
+        }
+        
+      
+        document.addEventListener('DOMContentLoaded', () => {
+           
+            createParticles();
+            createSoapBubbles();
+            startBackgroundChatBubbles();
+            
+         
+            setTimeout(() => {
+                const currentUser = document.querySelector('.current-user');
+                if (currentUser) {
+                    currentUser.classList.add('glow');
+                    setTimeout(() => {
+                        currentUser.classList.remove('glow');
+                    }, 3000);
+                }
+            }, 1000);
+            
+           
+            window.addEventListener('resize', debounce(() => {
+                createParticles();
+            }, 250));
+            
+           
+            document.getElementById('messageInput').focus();
+        });
+        
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+        
+        
+        setInterval(() => {
+            
+            const randomElement = document.querySelector(
+                Math.random() > 0.5 ? '.user-avatar' : '.message-sender'
+            );
+            
+            if (randomElement) {
+                randomElement.classList.add('color-shift');
+                setTimeout(() => {
+                    randomElement.classList.remove('color-shift');
+                }, 5000);
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
+
